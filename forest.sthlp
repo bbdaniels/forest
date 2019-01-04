@@ -6,9 +6,10 @@ Help for {hi:forest}
 
 {title:Description}
 
-{p}{cmd: forest} reports results from multiple regressions on a single independent variable as a modified "forest" chart.
-This chart shows the effect of a single treatment variable of interest on a range of independent variables.
-It can display raw coefficients, standardized effect sizes (Cohen's {it:d}), or odds ratios (from logistic regressions).{p_end}
+{p}{cmd: forest} visualizes results from multiple regressions on a single independent variable.
+The resulting "forest" chart shows the effect of a single treatment variable of interest on a set of independent variables.
+It can display raw coefficients, standardized effect sizes (Cohen's {it:d}), or odds ratios (from logistic regressions).
+It can also make Bonferroni corrections to the confidence intervals for multiple comparisons.{p_end}
 
 {title:Syntax}
 
@@ -51,4 +52,11 @@ This is calculated by adjusting the significance level to (100-5/({it:number of 
 {title:Author}
 
 Benjamin Daniels
-bdaniels@worldbank.org
+bbdaniels@gmail.com
+
+{title:Contributing}
+
+{p}{bf: forest} is open for development on {browse "https://bbdaniels.github.io/stata-code/forest/":GitHub}.
+Submit bugs and feature requests {browse "https://github.com/bbdaniels/forest/issues":here}.
+If you like {bf:forest}, be sure to visit my {browse "http://bbdaniels.github.io":homepage}
+and {browse "https://gist.github.com/bbdaniels/a3c9f9416f1d16d6f3c6e8cf371f1d89":Stata boilerplate code}.{p_end}

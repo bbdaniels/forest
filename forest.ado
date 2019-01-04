@@ -1,4 +1,6 @@
-*! version 0.1 09212011 – Benjamin Daniels – bbdaniels@gmail.com
+//! version 1.0 31DEC2018  DIME Analytics bbdaniels@gmail.com
+
+// Forest - Stata module to visualize results from multiple regressions on a single independent variable.
 
 cap prog drop forest
 prog def forest
