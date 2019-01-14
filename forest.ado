@@ -15,6 +15,8 @@ syntax anything =/exp /// syntax – forest reg d1 d2 d3 = treatment
 	 [WEIGHTs(string asis)] ///
 	 [Bonferroni]
 
+version 13.1
+
 preserve
 marksample touse, novarlist
 keep if `touse'
