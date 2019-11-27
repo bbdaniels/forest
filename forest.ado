@@ -6,63 +6,74 @@ cap prog drop forest
 prog def forest
 
 // Syntax --------------------------------------------------------------------------------------
-syntax anything /// syntax – forest reg d1 d2 d3 = treatment
+syntax anything /// syntax – forest reg d1 d2 d3
 	[if] [in] [fw pw iw aw] ///
 	, [*] /// regression options
-	 [or] /// odds-ratios
-	 [d]  /// cohen's d
-   Treatment(string asis) ///
-	 [Controls(varlist fv ts)] ///
-	 [GRAPHopts(string asis)] ///
+	 [or] /// odds-ratios: passes to regression command and orders log scale on chart
+	 [d]  /// cohen's d: standardizes all dependent variables before regression
+   Treatment(string asis) /// Open-ended to allow things like ivregress inputs
+	 [Controls(varlist fv ts)] /// Any variable list of controls
+	 [GRAPHopts(string asis)] /// Open-ended options for tw command
 	 [Bonferroni] [bh] // FWER corrections
 
 version 13.1
-
-preserve
-marksample touse, novarlist
-keep if `touse'
 qui {
-	// Setup -------------------------------------------------------------------------------------
+// Setup ---------------------------------------------------------------------------------------
+preserve
+  marksample touse, novarlist
+  keep if `touse'
 
-		tempvar dv
+	tempvar dv
+  cap mat drop results
 
-		if "`d'" == "d" local std "Standardized "
+  // Prefix when cohen's d ordered
+	if "`d'" == "d" local std "Standardized "
 
-		if "`or'" == "or" {
-			local l0 : label (`treatment') 0
-			local l1 : label (`treatment') 1
-		}
-		else {
-		  local tlab : var label `treatment'
-		}
+  // Labels for OR (binary variable assumed)
+	if "`or'" == "or" {
+		local l0 : label (`treatment') 0
+		local l1 : label (`treatment') 1
+	}
+	else {
+	  local tlab : var label `treatment'
+	}
 
-	// Set up Bonferroni -------------------------------------------------------------------------
+  // Get regression model
+  local cmd = substr( ///
+    "`anything'",1, ///
+    strpos("`anything'","(")-1)
+
+  // Parse dependent variable lists
+  parenParse `anything'
+  forvalues i = 1/`r(nStrings)' {
+    local string`i' = "`r(string`i')'"
+  }
+
+// Loop over dependent variable lists ----------------------------------------------------------
+local labpos = 1
+forvalues i = 1/`r(nStrings)' {
+
+  // Set up FWER correction
 	if "`bonferroni'" != "" {
     // Get Bonferroni critical value
-		local level = round(`=100-(5/`=`: word count `anything''-1')',0.01)
+		local level = round(`=100-(5/`=`: word count `string`i'''-1')',0.01)
     // Round to 2 digits (required by reg)
     local level : di %3.2f `level'
     // Implement using level() option NOTE: Do other specs use different options?
-		local bonferroni = "level(`level')"
-		di `"Bonferroni correction showing significance levels at: `level'%"'
+		local thisBonferroni = "level(`level')"
+		noi di `"Group `i' Bonferroni correction showing significance levels at: `level'%"'
 	}
 
-	// Set up depvars
-	tokenize `anything'
-		local cmd = "`1'"
-		mac shift
-
 	// Loop over depvars
-	cap mat drop results
-	local x = 1
+  tokenize `string`i''
 	qui while "`1'" != "" {
-		di "`1'"
 
 		// Get label
 		local theLabel : var lab `1'
-		local theLabels = `"`theLabels' `x' "`theLabel'""'
+    if "`bonferroni'`bh'" != "" local fwerlab "F`i': "
+		local theLabels = `"`theLabels' `labpos' "`fwerlab'`theLabel'""'
 
-		// Standardize if d option
+		// Standardize dependent variable if d option
 		if "`d'" == "d" {
 			cap drop `dv'
 			egen `dv' = std(`1')
@@ -73,61 +84,61 @@ qui {
 		`cmd' `1' `treatment' ///
       `controls' ///
       [`weight'`exp'] ///
-      , `options' `or' `bonferroni'
+      , `options' `or' `thisBonferroni'
 
-      // Store results
-			mat a = r(table)'
-			mat a = a[1,....]
-			mat results = nullmat(results) ///
-				\ a , `x'
+    // Store results
+		mat a = r(table)'
+		mat a = a[1,....]
+    if "`bh'" != "" mat a = `i' , a
+		mat results = nullmat(results) ///
+			\ a
 
-	local ++x
+	local ++labpos
 	mac shift
 	}
+}
 
-  // Graph ---------------------------------------------------------------------------------------
-  clear
-  svmat results , n(col)
+// Graph ---------------------------------------------------------------------------------------
+clear
+svmat results , n(col)
 
-    // Implement Benjamini-Hochberg --------------------------------------------------------------
-    if "`bh'" != "" {
-      egen bh_rank = rank(pvalue)
-      gen bh_crit = (bh_rank/_N)*0.05 // BH crit at alpha = 0.05
-      gen bh_elig = pvalue if pvalue < bh_crit
-      egen bh_max = max(bh_elig)
-      gen bh_sig = "*" if pvalue <= bh_max
-      local bhplot = "(scatter pos b , mlabpos(12) mlabgap(*-.75) mlab(bh_sig) m(none) mlabc(black) mlabsize(large))"
-      local note `""* Significant Benjamini-Hochberg p-value at FWER {&alpha} = 0.05.""'
-    }
+  // Implement Benjamini-Hochberg
+  if "`bh'" != "" {
+    bys c1 : egen bh_rank = rank(pvalue)
+    bys c1 : gen bh_crit = (bh_rank/_N)*0.05 // BH crit at alpha = 0.05
+    gen bh_elig = pvalue if (pvalue < bh_crit)
+    bys c1 : egen bh_max = max(bh_elig)
+    gen bh_sig = "*" if (pvalue <= bh_max) & (bh_max != .)
+    local bhplot = "(scatter pos b , mlabpos(12) mlabgap(*-.75) mlab(bh_sig) m(none) mlabc(black) mlabsize(large))"
+    local note `""* Significant Benjamini-Hochberg p-value at FWER {&alpha} = 0.05.""'
+  }
 
-  	// Chart parameters -----------------------------------------------------------------------
-    // Logarithmic outputs for odds ratios, otherwise linear effects
-  	if "`or'" == "or" {
-  		local log `"xline(1,lc(black) lw(thin)) xscale(log) xlab(.01 "1/100" .1 `""1/10" "{&larr} Favors `l0'""' 1 "1" 10 `""10" "Favors `l1'{&rarr}""' 100 "100")"'
-  		gen x1=100
-  		gen x2=1/100
-  	}
-  	else {
-  		local log `"xtit({&larr} `std'Effect of `tlab' {&rarr}) xline(0,lc(black) lw(thin) lp(dash))"'
-  		gen x1=0
-  		gen x2=0
-  	}
+  // Logarithmic outputs for odds ratios, otherwise linear effects
+	if "`or'" == "or" {
+		local log `"xline(1,lc(black) lw(thin)) xscale(log) xlab(.01 "1/100" .1 `""1/10" "{&larr} Favors `l0'""' 1 "1" 10 `""10" "Favors `l1'{&rarr}""' 100 "100")"'
+		gen x1=100
+		gen x2=1/100
+	}
+	else {
+		local log `"xtit({&larr} `std'Effect of `tlab' {&rarr}) xline(0,lc(black) lw(thin) lp(dash))"'
+		gen x1=0
+		gen x2=0
+	}
 
-      // Anchors
-      gen pos = _n
-  		gen y1 = 0
-  		gen y2 = `x'
+	// Graph ----------------------------------------------------------------------------------
+  gen pos = _n
+	gen y1 = 0
+	gen y2 = `labpos'
 
-  	// Graph ----------------------------------------------------------------------------------
-  	tw ///
-  		(scatter y1 x1 , m(none)) ///
-  		(scatter y2 x2 , m(none)) ///
-  		(rspike  ll ul pos , horizontal lc(gs12)) ///
-  		(scatter pos b , mc(black)) ///
-      `bhplot' ///
-  		, `graphopts' `log' yscale(reverse) ///
-        ylab(`theLabels',angle(0) notick nogrid) ytit(" ") legend(off) ///
-        note(`note' , span)
+	tw ///
+		(scatter y1 x1 , m(none)) ///
+		(scatter y2 x2 , m(none)) ///
+		(rspike  ll ul pos , horizontal lc(gs12)) ///
+		(scatter pos b , mc(black)) ///
+    `bhplot' ///
+		, `graphopts' `log' yscale(reverse) ///
+      ylab(`theLabels',angle(0) notick nogrid) ytit(" ") legend(off) ///
+      note(`note' , span)
 
 }
 end
