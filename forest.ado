@@ -14,7 +14,6 @@ syntax anything /// syntax – forest reg d1 d2 d3 = treatment
    Treatment(string asis) ///
 	 [Controls(varlist fv ts)] ///
 	 [GRAPHopts(string asis)] ///
-	 [WEIGHTs(string asis)] ///
 	 [Bonferroni] [bh] // FWER corrections
 
 version 13.1
@@ -24,10 +23,6 @@ marksample touse, novarlist
 keep if `touse'
 qui {
 	// Setup -------------------------------------------------------------------------------------
-
-		if "`weights'" != "" {
-			local weight "[`weights']"
-		}
 
 		tempvar dv
 
