@@ -61,7 +61,7 @@ forvalues i = 1/`r(nStrings)' {
     local level : di %3.2f `level'
     // Implement using level() option NOTE: Do other specs use different options?
 		local thisBonferroni = "level(`level')"
-		noi di `"Group `i' Bonferroni correction showing significance levels at: `level'%"'
+		local note `"`note' "Family `i' Bonferroni correction showing significance levels at: `level'%""'
 	}
 
 	// Loop over depvars
@@ -110,7 +110,7 @@ svmat results , n(col)
     bys c1 : egen bh_max = max(bh_elig)
     gen bh_sig = "*" if (pvalue <= bh_max) & (bh_max != .)
     local bhplot = "(scatter pos b , mlabpos(12) mlabgap(*-.75) mlab(bh_sig) m(none) mlabc(black) mlabsize(large))"
-    local note `""* Significant Benjamini-Hochberg p-value at FWER {&alpha} = 0.05.""'
+    local note `"`note' "* Significant Benjamini-Hochberg p-value at FWER {&alpha} = 0.05.""'
   }
 
   // Logarithmic outputs for odds ratios, otherwise linear effects
