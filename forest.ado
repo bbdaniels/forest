@@ -47,6 +47,7 @@ preserve
   parenParse `anything'
   forvalues i = 1/`r(nStrings)' {
     local string`i' = "`r(string`i')'"
+    unab string`i' : `string`i''
   }
 
 // Loop over dependent variable lists ----------------------------------------------------------
@@ -90,6 +91,7 @@ forvalues i = 1/`r(nStrings)' {
 		mat a = r(table)'
 		mat a = a[1,....]
     if "`bh'" != "" mat a = `i' , a
+
 		mat results = nullmat(results) ///
 			\ a
 
