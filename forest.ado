@@ -1,67 +1,82 @@
-//! version 1.0 31DEC2018  DIME Analytics bbdaniels@gmail.com
+//! version 2.0 31DEC2019  Benjamin Daniels bbdaniels@gmail.com
 
 // Forest - Stata module to visualize results from multiple regressions on a single independent variable.
 
 cap prog drop forest
 prog def forest
 
-syntax anything =/exp /// syntax – forest reg d1 d2 d3 = treatment
-	[if] [in]  ///
-	, [*] /// regression options
-	 [or] /// odds-ratios
-	 [d]  /// cohen's d
-	 [Controls(varlist fv ts)] ///
-	 [GRAPHopts(string asis)] ///
-	 [WEIGHTs(string asis)] ///
-	 [Bonferroni]
+// Syntax --------------------------------------------------------------------------------------
+syntax anything /// syntax – forest reg d1 d2 d3
+	[if] [in] [fw pw iw aw] ///
+	, ///
+    Treatment(string asis) /// Open-ended to allow things like ivregress inputs
+    [Controls(varlist fv ts)] /// Any variable list of controls
+    [or] /// odds-ratios: passes to regression command and orders log scale on chart
+    [d]  /// cohen's d: standardizes all dependent variables before regression
+    [Bonferroni] [bh] // FWER corrections
+    [GRAPHopts(string asis)] /// Open-ended options for tw command
+    [*] /// regression options
+
 
 version 13.1
-
-preserve
-marksample touse, novarlist
-keep if `touse'
 qui {
-	// Set up
+// Setup ---------------------------------------------------------------------------------------
+preserve
+  marksample touse, novarlist
+  keep if `touse'
 
-		if "`weights'" != "" {
-			local weight "[`weights']"
-		}
+	tempvar dv
+  cap mat drop results
 
-		tempvar dv
+  // Prefix when cohen's d ordered
+	if "`d'" == "d" local std "Standardized "
 
-		if "`d'" == "d" local std "Standardized "
-
-		if "`or'" == "or" {
-			local l0 : label (`exp') 0
-			local l1 : label (`exp') 1
-		}
-		else {
-		    local tlab : var label `exp'
-		}
-
-	// Set up Bonferroni
-	if "`bonferroni'" != "" {
-		local level = round(`=100-(5/`=`: word count `anything''-1')',0.01)
-		local bonferroni = "level(`level')"
-		di as err `"Bonferroni correction showing significance levels at: `level'%"'
+  // Labels for OR (binary variable assumed)
+	if "`or'" == "or" {
+		local l0 : label (`treatment') 0
+		local l1 : label (`treatment') 1
+	}
+	else {
+	  local tlab : var label `treatment'
 	}
 
-	// Set up depvars
-	tokenize `anything'
-		local cmd = "`1'"
-		mac shift
+  // Get regression model
+  local cmd = substr( ///
+    "`anything'",1, ///
+    strpos("`anything'","(")-1)
+
+  // Parse dependent variable lists
+  parenParse `anything'
+  forvalues i = 1/`r(nStrings)' {
+    local string`i' = "`r(string`i')'"
+    unab string`i' : `string`i''
+  }
+
+// Loop over dependent variable lists ----------------------------------------------------------
+local labpos = 1
+forvalues i = 1/`r(nStrings)' {
+
+  // Set up FWER correction
+	if "`bonferroni'" != "" {
+    // Get Bonferroni critical value
+		local level = round(`=100-(5/`=`: word count `string`i'''-1')',0.01)
+    // Round to 2 digits (required by reg)
+    local level : di %3.2f `level'
+    // Implement using level() option NOTE: Do other specs use different options?
+		local thisBonferroni = "level(`level')"
+		local note `"`note' "Family `i' Bonferroni correction showing significance levels at: `level'%""'
+	}
 
 	// Loop over depvars
-	cap mat drop results
-	local x = 1
+  tokenize `string`i''
 	qui while "`1'" != "" {
-		di "`1'"
 
 		// Get label
 		local theLabel : var lab `1'
-		local theLabels = `"`theLabels' `x' "`theLabel'""'
+    if "`bonferroni'`bh'" != "" local fwerlab "F`i': "
+		local theLabels = `"`theLabels' `labpos' "`fwerlab'`theLabel'""'
 
-		// Standardize if d option
+		// Standardize dependent variable if d option
 		if "`d'" == "d" {
 			cap drop `dv'
 			egen `dv' = std(`1')
@@ -69,42 +84,113 @@ qui {
 		}
 
 		// Regression
-		`cmd' `1' `exp' `controls' `weight', `options' `or' `bonferroni'
-			mat a = r(table)'
-			mat a = a[1,....]
-			mat results = nullmat(results) ///
-				\ a , `x'
+		`cmd' `1' `treatment' ///
+      `controls' ///
+      [`weight'`exp'] ///
+      , `options' `or' `thisBonferroni'
 
-	local ++x
+    // Store results
+		mat a = r(table)'
+		mat a = a[1,....]
+    if "`bh'" != "" mat a = `i' , a
+
+		mat results = nullmat(results) ///
+			\ a
+
+	local ++labpos
 	mac shift
 	}
+}
 
-// Graph
+// Graph ---------------------------------------------------------------------------------------
 clear
 svmat results , n(col)
 
-	// Setup
+  // Implement Benjamini-Hochberg
+  if "`bh'" != "" {
+    bys c1 : egen bh_rank = rank(pvalue)
+    bys c1 : gen bh_crit = (bh_rank/_N)*0.05 // BH crit at alpha = 0.05
+    gen bh_elig = pvalue if (pvalue < bh_crit)
+    bys c1 : egen bh_max = max(bh_elig)
+    gen bh_sig = "*" if (pvalue <= bh_max) & (bh_max != .)
+    local bhplot = "(scatter pos b , mlabpos(12) mlabgap(*-.75) mlab(bh_sig) m(none) mlabc(black) mlabsize(large))"
+    local note `"`note' "* Significant Benjamini-Hochberg p-value at FWER {&alpha} = 0.05.""'
+  }
+
+  // Logarithmic outputs for odds ratios, otherwise linear effects
 	if "`or'" == "or" {
 		local log `"xline(1,lc(black) lw(thin)) xscale(log) xlab(.01 "1/100" .1 `""1/10" "{&larr} Favors `l0'""' 1 "1" 10 `""10" "Favors `l1'{&rarr}""' 100 "100")"'
 		gen x1=100
 		gen x2=1/100
 	}
 	else {
-		local log `"xtit({&larr} `std'Effect of `tlab' {&rarr}) xline(0,lc(black) lw(thin))"'
+		local log `"xtit({&larr} `std'Effect of `tlab' {&rarr}) xline(0,lc(black) lw(thin) lp(dash))"'
 		gen x1=0
 		gen x2=0
 	}
 
-		gen y1 = 0
-		gen y2 = `x'
+	// Graph ----------------------------------------------------------------------------------
+  gen pos = _n
+	gen y1 = 0
+	gen y2 = `labpos'
 
-	// Graph
 	tw ///
 		(scatter y1 x1 , m(none)) ///
 		(scatter y2 x2 , m(none)) ///
-		(rcap  ll ul c10 , horizontal lc(black)) ///
-		(scatter c10 b , mc(black)) ///
-		, `graphopts' `log' yscale(reverse) ylab(`theLabels',angle(0) notick nogrid) ytit(" ") legend(off)
+		(rspike  ll ul pos , horizontal lc(gs12)) ///
+		(scatter pos b , mc(black)) ///
+    `bhplot' ///
+		, `graphopts' `log' yscale(reverse) ///
+      ylab(`theLabels',angle(0) notick nogrid) ytit(" ") legend(off) ///
+      note(`note' , span)
 
 }
 end
+// End -----------------------------------------------------------------------------------------
+
+// Program to parse on parenthesis -------------------------------------------------------------
+cap prog drop parenParse
+program def parenParse , rclass
+
+  syntax anything
+
+  local N = length(`"`anything'"')
+
+  local x = 0
+  local parCount = 0
+
+  // Run through string
+  forv i = 1/`N' {
+    local char = substr(`"`anything'"',`i',1) // Get next character
+
+    // Increment unit and counter when encountering open parenthesis
+    if `"`char'"' == "(" {
+      if `parCount' == 0 {
+        local ++x // Start next item when encountering new block
+      }
+      else {
+        local string`x' = `"`string`x''`char'"'
+      }
+      local ++parCount
+    }
+    // Otherwise de-increment counter if close parenthesis
+    else if `"`char'"' == ")" {
+      local --parCount
+      if `parCount' != 0 local string`x' = `"`string`x''`char'"'
+    }
+    // Otherwise add character to string block
+    else {
+      local string`x' = `"`string`x''`char'"'
+    }
+  }
+
+  // Return strings to calling program
+  return scalar nStrings = `x'
+  forv i = 1/`x' {
+    return local string`i' = `"`string`i''"'
+  }
+
+end
+// End -----------------------------------------------------------------------------------------
+
+// End of adofile
