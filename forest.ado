@@ -1,4 +1,4 @@
-//! version 1.0 31DEC2018  DIME Analytics bbdaniels@gmail.com
+//! version 2.0 31DEC2019  Benjamin Daniels bbdaniels@gmail.com
 
 // Forest - Stata module to visualize results from multiple regressions on a single independent variable.
 
@@ -8,13 +8,15 @@ prog def forest
 // Syntax --------------------------------------------------------------------------------------
 syntax anything /// syntax – forest reg d1 d2 d3
 	[if] [in] [fw pw iw aw] ///
-	, [*] /// regression options
-	 [or] /// odds-ratios: passes to regression command and orders log scale on chart
-	 [d]  /// cohen's d: standardizes all dependent variables before regression
-   Treatment(string asis) /// Open-ended to allow things like ivregress inputs
-	 [Controls(varlist fv ts)] /// Any variable list of controls
-	 [GRAPHopts(string asis)] /// Open-ended options for tw command
-	 [Bonferroni] [bh] // FWER corrections
+	, ///
+    Treatment(string asis) /// Open-ended to allow things like ivregress inputs
+    [Controls(varlist fv ts)] /// Any variable list of controls
+    [or] /// odds-ratios: passes to regression command and orders log scale on chart
+    [d]  /// cohen's d: standardizes all dependent variables before regression
+    [Bonferroni] [bh] // FWER corrections
+    [GRAPHopts(string asis)] /// Open-ended options for tw command
+    [*] /// regression options
+
 
 version 13.1
 qui {
