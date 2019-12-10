@@ -19,20 +19,24 @@ will return incorrect values.
 
 {title:Syntax}
 
-{p 2 4}{cmd: forest} {it:estimator} ({it:depvar family}) [({it:depvar family})] [...]
+{p 2 3}{cmd: forest} {it:estimator} ({it:depvar family}) [({it:depvar family})] [...]
 {break} [{help weight}] [{help if}] [{help in}]{p_end}
-{p 2 4}, [{opt t:reatment()}] [{opth c:ontrols(varlist)}]
-{break} [{opth graph:opts(twoway_options)}] [{bf:or|d}]
-{break} [{opt b:onferroni}] [{opt bh}] [{it:est_options}]{p_end}
+{p 2 3}, {opt t:reatment()}
+{break} [{opth c:ontrols(varlist)}]
+{break} [{bf:or|d}] [{opt b:onferroni}|{opt bh}]
+{break} [{opth graph:opts(twoway_options)}] [{it:est_options}]{p_end}
 
 {synoptset 16 tabbed}{...}
 {marker Options}{...}
 {synopthdr:Syntax}
 {synoptline}
-{synopt:{opt estimator}}Indicates the estimation command to be utilized.{p_end}
-{synopt:({it:depvar family})}List the left-hand-side variables in families for error control.{p_end}
+{p 4 2}{bf:Required Inputs}{p_end}{break}{break}
+{synopt:{opt estimator}}Indicates the estimation command to be utilized.{p_end}{break}
+{synopt:({it:depvar family})}List the left-hand-side variables in families for error control.
+At least one family of dependent variables is required.{p_end}{break}
 {synopt:{opt treatment()}}List the independent variable of interest
-(and any material to follow the estimator and precede the controls, in case of commands like {help ivregress 2sls}).{p_end}
+(and any material to follow the estimator and dependent variable and precede the controls, in case of commands like {help ivregress 2sls}).{p_end}{break}
+{p 4 2}{bf:Additional Options}{p_end}{break}{break}
 {synopt:{opt c:ontrols()}}Specify control variables.{p_end}
 {break}
 {synopt:{bf:or|d}}Request effect sizes as odds ratios (by exponentiating regression coefficients where possible)
@@ -56,9 +60,11 @@ Bonferroni control will adjust the confidence intervals, and Benjamini-Hochberg 
 {stata gen check2 = 1-foreign : gen check2 = 1-foreign}
 {stata label val check origin : label val check origin}
 
-{stata forest reg headroom foreign = rep78 : forest reg headroom foreign = rep78}
-{stata forest reg headroom foreign = rep78 , d : forest reg headroom foreign = rep78 , d}
-{stata forest logit check2 foreign = check , or : forest logit check2 foreign = check , or}
+{stata forest reg (headroom foreign) , t(rep78) : forest reg (headroom foreign) , t(rep78)}
+{stata forest reg (headroom foreign) , t(rep78) d : forest reg (headroom foreign) , t(rep78) d}
+{stata forest reg (headroom foreign) , t(rep78) b : forest reg (headroom foreign) , t(rep78) b}
+{stata forest reg (headroom foreign) , t(rep78) bh : forest reg (headroom foreign) , t(rep78) bh}
+{stata forest logit (check2 foreign) , t(check) or : forest logit (check2 foreign) , t(check) or}
 
 {title:Author}
 
