@@ -140,9 +140,9 @@ svmat results , n(col)
 		(rspike  ll ul pos , horizontal lc(gs12)) ///
 		(scatter pos b , mc(black)) ///
     `bhplot' ///
-		, `graphopts' `log' yscale(reverse) ///
+		, `log' yscale(reverse) ///
       ylab(`theLabels',angle(0) notick nogrid) ytit(" ") legend(off) ///
-      note(`note' , span)
+      note(`note' , span) `graphopts' 
 
 }
 end
