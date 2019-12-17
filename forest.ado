@@ -13,6 +13,7 @@ syntax anything /// syntax – forest reg d1 d2 d3
     [Controls(varlist fv ts)] /// Any variable list of controls
     [or] /// odds-ratios: passes to regression command and orders log scale on chart
     [d]  /// cohen's d: standardizes all dependent variables before regression
+    [sort(string asis)] /// Allow ordering of results by size: global, family
     [Bonferroni] [bh] /// FWER corrections
     [GRAPHopts(string asis)] /// Open-ended options for tw command
     [*] /// regression options
@@ -74,7 +75,7 @@ forvalues i = 1/`r(nStrings)' {
 		// Get label
 		local theLabel : var lab `1'
     if "`bonferroni'`bh'" != "" local fwerlab "F`i': "
-		local theLabels = `"`theLabels' `labpos' "`fwerlab'`theLabel'""'
+		local theLabels = `"`theLabels' "`fwerlab'`theLabel'""'
 
 		// Standardize dependent variable if d option
 		if "`d'" == "d" {
@@ -106,6 +107,14 @@ forvalues i = 1/`r(nStrings)' {
 clear
 svmat results , n(col)
 
+  // Input labels
+  qui count
+  gen label = ""
+  forv i = 1/`r(N)' {
+    local thisLabel : word `i' of `theLabels'
+    replace label  = "`thisLabel'" in `i'
+  }
+
   // Implement Benjamini-Hochberg
   if "`bh'" != "" {
     bys c1 : egen bh_rank = rank(pvalue)
@@ -115,6 +124,22 @@ svmat results , n(col)
     gen bh_sig = "*" if (pvalue <= bh_max) & (bh_max != .)
     local bhplot = "(scatter pos b , mlabpos(12) mlabgap(*-.75) mlab(bh_sig) m(none) mlabc(black) mlabsize(large))"
     local note `"`note' "* Significant Benjamini-Hochberg p-value at FWER {&alpha} = 0.05.""'
+
+  // Allow family-wise sorting
+  cap gen c1 = 1
+  if "`sort'" == "family" {
+    sort c1 b
+  }
+  if "`sort'" == "global" {
+    sort b
+  }
+
+  // Set up labels
+  qui count
+  local theLabels = ""
+  forv i = 1/`r(N)' {
+    local thisLabel = label[`i']
+    local theLabels = `"`theLabels' `i' "`thisLabel'""'
   }
 
   // Logarithmic outputs for odds ratios, otherwise linear effects
