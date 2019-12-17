@@ -116,14 +116,16 @@ svmat results , n(col)
   }
 
   // Implement Benjamini-Hochberg
+  gen bh_sig = ""
   if "`bh'" != "" {
     bys c1 : egen bh_rank = rank(pvalue)
     bys c1 : gen bh_crit = (bh_rank/_N)*0.05 // BH crit at alpha = 0.05
     gen bh_elig = pvalue if (pvalue < bh_crit)
     bys c1 : egen bh_max = max(bh_elig)
-    gen bh_sig = "*" if (pvalue <= bh_max) & (bh_max != .)
-    local bhplot = "(scatter pos b , mlabpos(12) mlabgap(*-.75) mlab(bh_sig) m(none) mlabc(black) mlabsize(large))"
-    local note `"`note' "* Significant Benjamini-Hochberg p-value at FWER {&alpha} = 0.05.""'
+    replace bh_sig = "*" if (pvalue <= bh_max) & (bh_max != .)
+    local bhplot = `"(scatter pos b if bh_sig == "*", m(S) mc(red) )"'
+    local note `"`note' "Colored markers indicate signifcant Benjamini-Hochberg p-value at FWER {&alpha} = 0.05.""'
+  }
 
   // Allow family-wise sorting
   cap gen c1 = 1
@@ -163,11 +165,11 @@ svmat results , n(col)
 		(scatter y1 x1 , m(none)) ///
 		(scatter y2 x2 , m(none)) ///
 		(rspike  ll ul pos , horizontal lc(gs12)) ///
-		(scatter pos b , mc(black)) ///
+		(scatter pos b if bh_sig != "*", mc(black) ) ///
     `bhplot' ///
 		, `log' yscale(reverse) ///
       ylab(`theLabels',angle(0) notick nogrid) ytit(" ") legend(off) ///
-      note(`note' , span) `graphopts' 
+      note(`note' , span) `graphopts'
 
 }
 end
