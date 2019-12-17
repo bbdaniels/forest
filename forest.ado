@@ -74,8 +74,8 @@ forvalues i = 1/`r(nStrings)' {
 
 		// Get label
 		local theLabel : var lab `1'
-    if "`bonferroni'`bh'" != "" local fwerlab "F`i': "
-		local theLabels = `"`theLabels' "`fwerlab'`theLabel'""'
+    if "`bonferroni'`bh'" != "" local fwerlab " [F`i']"
+		local theLabels = `"`theLabels' "`theLabel'`fwerlab'""'
 
 		// Standardize dependent variable if d option
 		if "`d'" == "d" {
