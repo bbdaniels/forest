@@ -65,7 +65,7 @@ forvalues i = 1/`r(nStrings)' {
     local level : di %3.2f `level'
     // Implement using level() option NOTE: Do other specs use different options?
 		local thisBonferroni = "level(`level')"
-		local note `"`note' "Family `i' Bonferroni correction showing significance levels at: `level'%""'
+		local note `"`note' "Family `i' Bonferroni correction showing confidence intervals for: `level'%""'
 	}
 
 	// Loop over depvars
