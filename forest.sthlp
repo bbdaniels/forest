@@ -24,6 +24,7 @@ will return incorrect values.
 {p 2 3}, {opt t:reatment()}
 {break} [{opth c:ontrols(varlist)}]
 {break} [{bf:or|d}] [{opt b:onferroni}|{opt bh}]
+{break} [{bf:sort}({it:local}|{it:global})]
 {break} [{opth graph:opts(twoway_options)}] [{it:est_options}]{p_end}
 
 {synoptset 16 tabbed}{...}
@@ -34,7 +35,7 @@ will return incorrect values.
 {synopt:{opt estimator}}Indicates the estimation command to be utilized.{p_end}{break}
 {synopt:({it:depvar family})}List the left-hand-side variables in families for error control.
 At least one family of dependent variables is required.{p_end}{break}
-{synopt:{opt treatment()}}List the independent variable of interest
+{synopt:{opt t:reatment(var)}}List the independent variable of interest
 (and any material to follow the estimator and dependent variable and precede the controls, in case of commands like {help ivregress 2sls}).{p_end}{break}
 {p 4 2}{bf:Additional Options}{p_end}{break}{break}
 {synopt:{opt c:ontrols()}}Specify control variables.{p_end}
@@ -47,6 +48,10 @@ This is calculated by adjusting the significance level to (100-5/({it:number of 
 {synopt:* {opt bh}}Request Benjamini-Hochberg significance for simultaneous comparisons.
 This is calculated by comparing the raw p-value against ({it:rank}/({it:number of regressions}))*0.05 per family.{p_end}
 {break}
+
+{synopt:{opt sort(type)}}Request that results be sorted from the smallest result to the largest.
+The {it:local} option sorts within each family;
+the {it:global} option applies the sort to all specified results.{p_end}
 {synopt:{opt graph:opts()}}Set any desired options for the graph.{p_end}
 {synopt:{it:est_options}}Specify any options needed for the estimator.{p_end}
 {synoptline}
