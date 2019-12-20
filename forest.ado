@@ -1,4 +1,4 @@
-//! version 2.1 31DEC2019  Benjamin Daniels bbdaniels@gmail.com
+*! version 2.2 31DEC2019  Benjamin Daniels bbdaniels@gmail.com
 
 // Forest - Stata module to visualize results from multiple regressions on a single independent variable.
 
@@ -129,7 +129,7 @@ svmat results , n(col)
 
   // Allow family-wise sorting
   cap gen c1 = 1
-  if "`sort'" == "family" {
+  if "`sort'" == "local" {
     sort c1 b
   }
   if "`sort'" == "global" {
