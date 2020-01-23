@@ -16,6 +16,7 @@ syntax anything /// syntax – forest reg d1 d2 d3
     [sort(string asis)] /// Allow ordering of results by size: global, family
     [Bonferroni] [bh] /// FWER corrections
     [GRAPHopts(string asis)] /// Open-ended options for tw command
+    [CRITical(real 0.05)] /// Allow changing critical value: 0.05 as default
     [*] /// regression options
 
 
@@ -107,10 +108,6 @@ forvalues i = 1/`r(nStrings)' {
 clear
 svmat results , n(col)
 
-  gen bh_sig = "*" if (pvalue <= 0.05)
-  local bhplot = "(scatter pos b , mlabpos(12) mlabgap(*-.75) mlab(bh_sig) m(none) mlabc(black) mlabsize(large))"
-  local note `"`note' "* Significant p-value at {&alpha} = 0.05.""'
-
   // Input labels
   qui count
   gen label = ""
@@ -123,12 +120,17 @@ svmat results , n(col)
   gen bh_sig = ""
   if "`bh'" != "" {
     bys c1 : egen bh_rank = rank(pvalue)
-    bys c1 : gen bh_crit = (bh_rank/_N)*0.05 // BH crit at alpha = 0.05
+    bys c1 : gen bh_crit = (bh_rank/_N)*`critical' // BH crit at selected alpha
     gen bh_elig = pvalue if (pvalue < bh_crit)
     bys c1 : egen bh_max = max(bh_elig)
     replace bh_sig = "*" if (pvalue <= bh_max) & (bh_max != .)
-    local bhplot = `"(scatter pos b if bh_sig == "*", m(S) mc(red) )"'
-    local note `"`note' "Colored markers indicate signifcant Benjamini-Hochberg p-value at FWER {&alpha} = 0.05.""'
+    local bhplot = `"(scatter pos b if bh_sig == "*", ms(O) mlc(black) mfc(red) msize(medlarge) mlw(thin) )"'
+    local note `"`note' "Colored markers indicate signifcant Benjamini-Hochberg p-value at FWER {&alpha} = `critical'.""'
+  }
+  else {
+    gen sig = "*" if (pvalue <= `critical')
+    local bhplot = `"(scatter pos b if sig == "*", ms(O) mlc(black) mfc(red) msize(medlarge) mlw(thin) )"'
+    local note `"`note' "Colored markers indicate signifcant p-value at {&alpha} = `critical'.""'
   }
 
   // Allow family-wise sorting
@@ -168,8 +170,8 @@ svmat results , n(col)
 	tw ///
 		(scatter y1 x1 , m(none)) ///
 		(scatter y2 x2 , m(none)) ///
-		(rspike  ll ul pos , horizontal lc(gs12)) ///
-		(scatter pos b if bh_sig != "*", mc(black) ) ///
+		(rspike  ll ul pos , horizontal lc(gs12) lw(thin)) ///
+		(scatter pos b if bh_sig != "*", ms(O) mlc(black) mfc(white) msize(medlarge) mlw(thin) ) ///
     `bhplot' ///
 		, `log' yscale(reverse) ///
       ylab(`theLabels',angle(0) notick nogrid) ytit(" ") legend(off) ///
