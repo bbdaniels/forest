@@ -107,6 +107,10 @@ forvalues i = 1/`r(nStrings)' {
 clear
 svmat results , n(col)
 
+  gen bh_sig = "*" if (pvalue <= 0.05)
+  local bhplot = "(scatter pos b , mlabpos(12) mlabgap(*-.75) mlab(bh_sig) m(none) mlabc(black) mlabsize(large))"
+  local note `"`note' "* Significant p-value at {&alpha} = 0.05.""'
+
   // Input labels
   qui count
   gen label = ""
