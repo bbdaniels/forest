@@ -56,7 +56,8 @@ preserve
 
 // Loop over dependent variable lists ----------------------------------------------------------
 local labpos = 1
-forvalues i = 1/`r(nStrings)' {
+local nStrings = `r(nStrings)'
+forvalues i = 1/`nStrings' {
 
   // Set up FWER correction
 	if "`bonferroni'" != "" {
@@ -75,7 +76,7 @@ forvalues i = 1/`r(nStrings)' {
 
 		// Get label
 		local theLabel : var lab `1'
-    if "`bonferroni'`bh'" != "" local fwerlab " [F`i']"
+    if ("`bonferroni'`bh'" != "") & (`nStrings' > 1) local fwerlab " [F`i']"
 		local theLabels = `"`theLabels' "`theLabel'`fwerlab'""'
 
 		// Standardize dependent variable if d option
