@@ -1,4 +1,4 @@
-*! version 2.2 31DEC2019  Benjamin Daniels bbdaniels@gmail.com
+*! version 2.3 31JAN2020  Benjamin Daniels bbdaniels@gmail.com
 
 // Forest - Stata module to visualize results from multiple regressions on a single independent variable.
 
