@@ -1,5 +1,5 @@
 {smcl}
-{* Dec 31st 2019}
+{* Feb 3rd 2020}
 {hline}
 Help for {hi:forest}
 {hline}
@@ -21,11 +21,10 @@ will return incorrect values.
 
 {p 2 3}{cmd: forest} {it:estimator} ({it:depvar family}) [({it:depvar family})] [...]
 {break} [{help weight}] [{help if}] [{help in}]{p_end}
-{p 2 3}, {opt t:reatment()}
-{break} [{opth c:ontrols(varlist)}]
-{break} [{bf:or|d}] [{opt b:onferroni}|{opt bh}]
-{break} [{bf:sort}({it:local}|{it:global})]
-{break} [{opth graph:opts(twoway_options)}] [{it:est_options}]{p_end}
+{p 2 3}, {opth t:reatment(varname)} [{opth c:ontrols(varlist)}] [{it:estimation_opts}]
+{break} [{bf:or|d}] [{opt b:onferroni}|{opt bh}] [{opt crit:ical(value)}]
+{break} [{bf:sort}({it:local}|{it:global})] [{opth graph:opts(twoway_options)}] {p_end}
+
 
 {synoptset 16 tabbed}{...}
 {marker Options}{...}
@@ -34,29 +33,37 @@ will return incorrect values.
 {p 4 2}{bf:Required Inputs}{p_end}{break}{break}
 {synopt:{opt estimator}}Indicates the estimation command to be utilized.{p_end}{break}
 {synopt:({it:depvar family})}List the left-hand-side variables in families for error control.
-At least one family of dependent variables is required.{p_end}{break}
-{synopt:{opt t:reatment(var)}}List the independent variable of interest
+At least one family of dependent variables is required and the parentheses are required.{p_end}{break}
+{synopt:{opt t:reatment()}}List the independent variable of interest
 (and any material to follow the estimator and dependent variable and precede the controls, in case of commands like {help ivregress 2sls}).{p_end}{break}
-{p 4 2}{bf:Additional Options}{p_end}{break}{break}
-{synopt:{opt c:ontrols()}}Specify control variables.{p_end}
+{synopt:{it:estimation_opts}}Specify any options needed for the estimator.{p_end}
+{break}
+{p 4 2}{bf:Modelling Options}{p_end}{break}{break}
+{synopt:{opt c:ontrols()}}Specify control variables.
+Use "@" to signify the name of the current left-hand-side variable when needed,
+such as {bf:controls(L.@)} to control for lagged values after {help xtset}.{p_end}
+{break}
+{synopt:{opt crit:ical()}}Specify critical p-value for highlighting significant results (default = 0.05).{p_end}
 {break}
 {synopt:{bf:or|d}}Request effect sizes as odds ratios (by exponentiating regression coefficients where possible)
-or in terms of Cohen's {it:d} (by standardizing the dependent variables). (Choose only one.){p_end}
+or in terms of Cohen's {it:d} (by standardizing the dependent variables). Choose only one.{p_end}
 {break}
 {synopt:* {opt b:onferroni}}Request confidence intervals calculated with Bonferroni correction for simultaneous comparisons.
 This is calculated by adjusting the significance level to (100-5/({it:number of regressions})) per family.{p_end}
+{break}
 {synopt:* {opt bh}}Request Benjamini-Hochberg significance for simultaneous comparisons.
 This is calculated by comparing the raw p-value against ({it:rank}/({it:number of regressions}))*0.05 per family.{p_end}
 {break}
-
+{p 4 2}{bf:Display Options}{p_end}{break}{break}
 {synopt:{opt sort(type)}}Request that results be sorted from the smallest result to the largest.
 The {it:local} option sorts within each family;
 the {it:global} option applies the sort to all specified results.{p_end}
+{break}
 {synopt:{opt graph:opts()}}Set any desired options for the graph.{p_end}
-{synopt:{it:est_options}}Specify any options needed for the estimator.{p_end}
 {synoptline}
-{p 4 4}* Both {opt b:onferroni} and {opt bh} can be specified, but they will have different results –
-Bonferroni control will adjust the confidence intervals, and Benjamini-Hochberg control will adjust the significance.{p_end}
+{p 4 4}* Both {opt b:onferroni} and {opt bh} can be specified, but they produce different adjustments –
+Bonferroni control will adjust the confidence intervals, and Benjamini-Hochberg control will adjust the significance.
+It is possible to have a BH-significant result whose CI includes the null, with or without Bonferroni adjustment.{p_end}
 
 {title:Examples}
 
