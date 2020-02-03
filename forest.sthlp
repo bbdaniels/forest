@@ -39,7 +39,9 @@ At least one family of dependent variables is required and the parentheses are r
 {synopt:{it:estimation_opts}}Specify any options needed for the estimator.{p_end}
 {break}
 {p 4 2}{bf:Modelling Options}{p_end}{break}{break}
-{synopt:{opt c:ontrols()}}Specify control variables.{p_end}
+{synopt:{opt c:ontrols()}}Specify control variables.
+Use "@" to signify the name of the current left-hand-side variable when needed,
+such as {bf:controls(L.@)} to control for lagged values after {help xtset}.{p_end}
 {break}
 {synopt:{opt crit:ical()}}Specify critical p-value for highlighting significant results (default = 0.05).{p_end}
 {break}

@@ -1,4 +1,4 @@
-*! version 2.3 31JAN2020  Benjamin Daniels bbdaniels@gmail.com
+*! version 2.3: 3 Feb 2020 Benjamin Daniels bbdaniels@gmail.com
 
 // Forest - Stata module to visualize results from multiple regressions on a single independent variable.
 
@@ -10,7 +10,7 @@ syntax anything /// syntax – forest reg d1 d2 d3
 	[if] [in] [fw pw iw aw] ///
 	, ///
     Treatment(string asis) /// Open-ended to allow things like ivregress inputs
-    [Controls(varlist fv ts)] /// Any variable list of controls
+    [Controls(string asis)] /// Any variable list of controls
     [or] /// odds-ratios: passes to regression command and orders log scale on chart
     [d]  /// cohen's d: standardizes all dependent variables before regression
     [sort(string asis)] /// Allow ordering of results by size: global, family
@@ -86,9 +86,12 @@ forvalues i = 1/`nStrings' {
 			local 1 = "`dv'"
 		}
 
+    // Replace any self-referenced controls here
+    local theseControls = subinstr("`controls'","@","`1'",.)
+
 		// Regression
 		`cmd' `1' `treatment' ///
-      `controls' ///
+      `theseControls' ///
       [`weight'`exp'] ///
       , `options' `or' `thisBonferroni'
 
