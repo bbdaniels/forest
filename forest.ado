@@ -51,6 +51,13 @@ preserve
   parenParse `anything'
   forvalues i = 1/`r(nStrings)' {
     local string`i' = "`r(string`i')'"
+
+    // Get if-condition
+    if regexm("`string`i''"," if ") {
+      local ifcond`i' = substr("`string`i''",strpos("`string`i''"," if "),.)
+      local string`i' = subinstr("`string`i''","`ifcond`i''","",.)
+    }
+
     unab string`i' : `string`i''
   }
 
@@ -92,6 +99,7 @@ forvalues i = 1/`nStrings' {
 		// Regression
 		`cmd' `1' `treatment' ///
       `theseControls' ///
+      `ifcond`i'' ///
       [`weight'`exp'] ///
       , `options' `or' `thisBonferroni'
 
