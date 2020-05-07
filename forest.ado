@@ -106,7 +106,7 @@ forvalues i = 1/`nStrings' {
     // Store results
 		mat a = r(table)'
 		mat a = a[1,....]
-    if "`bh'" != "" mat a = `i' , a
+    mat a = `i' , a
 
 		mat results = nullmat(results) ///
 			\ a
