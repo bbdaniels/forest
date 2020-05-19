@@ -39,7 +39,7 @@ preserve
 		local l1 : label (`treatment') 1
 	}
 	else {
-	  local tlab : var label `treatment'
+	  cap local tlab : var label `treatment'
 	}
 
   // Get regression model
@@ -51,6 +51,13 @@ preserve
   parenParse `anything'
   forvalues i = 1/`r(nStrings)' {
     local string`i' = "`r(string`i')'"
+
+    // Get if-condition
+    if regexm("`string`i''"," if ") {
+      local ifcond`i' = substr("`string`i''",strpos("`string`i''"," if "),.)
+      local string`i' = subinstr("`string`i''","`ifcond`i''","",.)
+    }
+
     unab string`i' : `string`i''
   }
 
@@ -92,13 +99,14 @@ forvalues i = 1/`nStrings' {
 		// Regression
 		`cmd' `1' `treatment' ///
       `theseControls' ///
+      `ifcond`i'' ///
       [`weight'`exp'] ///
       , `options' `or' `thisBonferroni'
 
     // Store results
 		mat a = r(table)'
 		mat a = a[1,....]
-    if "`bh'" != "" mat a = `i' , a
+    mat a = `i' , a
 
 		mat results = nullmat(results) ///
 			\ a
