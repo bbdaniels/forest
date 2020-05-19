@@ -39,7 +39,7 @@ preserve
 		local l1 : label (`treatment') 1
 	}
 	else {
-	  local tlab : var label `treatment'
+	  cap local tlab : var label `treatment'
 	}
 
   // Get regression model
