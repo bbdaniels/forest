@@ -66,7 +66,7 @@ local labpos = 1
 local nStrings = `r(nStrings)'
 forvalues i = 1/`nStrings' {
 
-  // Set up FWER correction
+  // Set up multiple hypothesis correction
 	if "`bonferroni'" != "" {
     // Get Bonferroni critical value
 		local level = round(`=100-(5/`=`: word count `string`i'''-1')',0.01)
@@ -137,12 +137,12 @@ svmat results , n(col)
     bys c1 : egen bh_max = max(bh_elig)
     replace bh_sig = "*" if (pvalue <= bh_max) & (bh_max != .)
     local bhplot = `"(scatter pos b if bh_sig == "*", ms(O) mlc(black) mfc(red) msize(medlarge) mlw(thin) )"'
-    local note `"`note' "Colored markers indicate signifcant Benjamini-Hochberg p-value at FWER {&alpha} = `critical'.""'
+    local note `"`note' "Colored markers indicate significant Benjamini-Hochberg p-value at FDR {&alpha} = `critical'.""'
   }
   else {
     gen sig = "*" if (pvalue <= `critical')
     local bhplot = `"(scatter pos b if sig == "*", ms(O) mlc(black) mfc(red) msize(medlarge) mlw(thin) )"'
-    local note `"`note' "Colored markers indicate signifcant p-value at {&alpha} = `critical'.""'
+    local note `"`note' "Colored markers indicate significant p-value at {&alpha} = `critical'.""'
   }
 
   // Allow family-wise sorting
