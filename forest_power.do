@@ -54,11 +54,13 @@ preserve
       local legend `"`legend' `i' "`l'" "'
   }
 
+  sort c2
+    local nn = c2[1]
   
   tempname ga gb gc
   
   tw `g1' , nodraw saving(`gc'.gph , replace) legend(on order(`legend')) ///
-    title("Power") ylab(0 "0%" .2 "20%" .4 "40%" .6 "60%" .8 "80%" 1 "100%") yline(0.8) ///
+    title("Power (vs N = `nn')") ylab(0 "0%" .2 "20%" .4 "40%" .6 "60%" .8 "80%" 1 "100%") yline(0.8) ///
     xtit("Sample Size Multiple") ytit("") xscale(r(1)) xlab(#6)
   tw `g2' , nodraw saving(`ga'.gph , replace) ///
     title("Probability of Wrong Sign") ylab(0 "0%" .5 "50%" 1 "100%") ///
