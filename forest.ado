@@ -18,6 +18,7 @@ syntax anything /// syntax – forest reg d1 d2 d3
     [Bonferroni] [bh] /// FWER corrections
     [GRAPHopts(string asis)] /// Open-ended options for tw command
     [CRITical(real 0.05)] /// Allow changing critical value: 0.05 as default
+		[forestpower] /// Hidden option to implement Power call
     [*] /// regression options
 
 
@@ -107,7 +108,7 @@ forvalues i = 1/`nStrings' {
     // Store results
 		mat a = r(table)'
 		mat a = a[1,....]
-    mat a = `i' , a
+    mat a = `i' , `e(N)' , a
 
 		mat results = nullmat(results) ///
 			\ a
@@ -181,6 +182,12 @@ svmat results , n(col)
 		local log `"xtit({&larr} `std'Effect of `tlab' {&rarr}) xline(0,lc(black) lw(thin) lp(dash))"'
 		gen x1=0
 		gen x2=0
+	}
+	
+	// Power implementation escape ----------------------------------------------------------------------------------
+	if "`forestpower'" != "" {
+		restore, not
+		exit
 	}
 
 	// Graph ----------------------------------------------------------------------------------
