@@ -63,7 +63,7 @@ preserve
     title("Power (vs N = `nn')") ylab(0 "0%" .2 "20%" .4 "40%" .6 "60%" .8 "80%" 1 "100%") yline(0.8) ///
     xtit("Sample Size Multiple") ytit("") xscale(r(1)) xlab(#6)
   tw `g2' , nodraw saving(`ga'.gph , replace) ///
-    title("Probability of Wrong Sign") ylab(0 "0%" .5 "50%" 1 "100%") ///
+    title("Probability of Wrong Sign") ylab(0 "0%" .25 "25%" .5 "50%" ) ///
     xtit("") ytit("") xscale(r(1)) xlab(#6)
   tw `g3' , nodraw saving(`gb'.gph , replace) ///
    title("Exaggeration Factor When Significant") ///
