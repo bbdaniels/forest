@@ -40,7 +40,7 @@ preserve
   gen rand = rnormal()
     gen b_new = b + rand*se
     gen rsig = (b_new > (ul-b)) | (b_new < (ll-b))
-    gen type_s = (b_new > 0 & b < 0) | (b_new < 0 & b > 0)
+    gen type_s = rsig & ((b_new > 0 & b < 0) | (b_new < 0 & b > 0))
     gen type_m = (b_new / b) if rsig & !type_s
     collapse (mean) rsig type_s type_m multiple, by(label c2)
     
