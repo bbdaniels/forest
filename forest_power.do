@@ -7,6 +7,7 @@ syntax anything , ///
   [reps(integer 10000)] ///
   [seed(integer 123456)] /// 
   [graph_opts(string asis)] ///
+	[Saving(string asis)] /// Save table
   [*] // Options to pass to [forest]
 
 qui {
@@ -38,11 +39,21 @@ preserve
   expand `reps'
   
   gen rand = rnormal()
-    gen b_new = b + rand*se
-    gen rsig = (b_new > (ul-b)) | (b_new < (ll-b))
-    gen type_s = rsig & ((b_new > 0 & b < 0) | (b_new < 0 & b > 0))
-    gen type_m = (b_new / b) if rsig & !type_s
+    gen b_new  = b + rand*se
+    gen rsig   = (b_new > (ul-b)) | (b_new < (ll-b))
+    gen type_s = ((b_new > 0 & b < 0) | (b_new < 0 & b > 0)) if rsig
+    gen type_m = abs(b_new / b) if rsig 
     collapse (mean) rsig type_s type_m multiple, by(label c2)
+		
+  if `"`saving'"' != `""' {
+		lab var rsig "Power"
+		lab var type_s "Type S"
+		lab var type_m "Type M"
+		lab var multiple "Sample Multiple"
+		lab var label "Variable"
+		sort label multiple
+		export excel label multiple rsig type_s type_m  using `saving' , replace first(varl)
+	}
     
   levelsof label , local(levels)
   local i = 0
@@ -61,15 +72,15 @@ preserve
   
   tw `g1' , nodraw saving(`gc'.gph , replace) legend(on order(`legend')) ///
     title("Power (vs N = `nn')") ylab(0 "0%" .2 "20%" .4 "40%" .6 "60%" .8 "80%" 1 "100%") yline(0.8) ///
-    xtit("Sample Size Multiple") ytit("") xscale(r(1)) xlab(#6)
+    xtit("Sample Size Multiple") ytit("") xscale(r(1)) xlab(#6) legend(size(small))
   tw `g2' , nodraw saving(`ga'.gph , replace) ///
-    title("Probability of Wrong Sign") ylab(0 "0%" .25 "25%" .5 "50%" ) ///
+    title("Probability of Wrong Sign When Significant")  ///
     xtit("") ytit("") xscale(r(1)) xlab(#6)
   tw `g3' , nodraw saving(`gb'.gph , replace) ///
    title("Exaggeration Factor When Significant") ///
    xtit("") ytit("") xscale(r(1)) xlab(#6)
   
-  graph combine `ga'.gph `gb'.gph , c(1) nodraw saving(`ga'.gph , replace)
+  graph combine `gb'.gph `ga'.gph , c(1) nodraw saving(`ga'.gph , replace)
   graph combine `gc'.gph `ga'.gph , c(2)
   
   !rm `ga'.gph `gb'.gph `gc'.gph

@@ -18,6 +18,7 @@ syntax anything /// syntax – forest reg d1 d2 d3
     [Bonferroni] [bh] /// FWER corrections
     [GRAPHopts(string asis)] /// Open-ended options for tw command
     [CRITical(real 0.05)] /// Allow changing critical value: 0.05 as default
+		[Saving(string asis)] /// Save table
 		[forestpower] /// Hidden option to implement Power call
     [*] /// regression options
 
@@ -71,7 +72,7 @@ forvalues i = 1/`nStrings' {
   // Set up multiple hypothesis correction
 	if "`bonferroni'" != "" {
     // Get Bonferroni critical value
-		local level = round(`=100-(5/`=`: word count `string`i'''-1')',0.01)
+		local level = round(`=100-(5/`: word count `string`i''')',0.01)
     // Round to 2 digits (required by reg)
     local level : di %3.2f `level'
     // Implement using level() option NOTE: Do other specs use different options?
@@ -188,6 +189,16 @@ svmat results , n(col)
 	if "`forestpower'" != "" {
 		restore, not
 		exit
+	}
+
+	// Saving ----------------------------------------------------------------------------------
+  if `"`saving'"' != `""' {
+		lab var b "Point Estimate"
+		lab var se "Unadjusted Standard Error"
+		lab var mdeL "Minimum Detectable Effect"
+		lab var pvalue "Unadjusted P-Value"
+		lab var label "Outcome"
+		export excel label b se mdeL pvalue using `saving' , replace first(varl)
 	}
 
 	// Graph ----------------------------------------------------------------------------------
