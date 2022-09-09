@@ -193,12 +193,18 @@ svmat results , n(col)
 
 	// Saving ----------------------------------------------------------------------------------
   if `"`saving'"' != `""' {
+		if "`mde'" != "" {
+		  lab var mdeL "Minimum Detectable Effect"
+			local mdepos "mdeL"
+		}
+		
 		lab var b "Point Estimate"
 		lab var se "Unadjusted Standard Error"
-		lab var mdeL "Minimum Detectable Effect"
 		lab var pvalue "Unadjusted P-Value"
 		lab var label "Outcome"
-		export excel label b se mdeL pvalue using `saving' , replace first(varl)
+		lab var ll "CI Lower"
+		lab var ul "CI Upper"
+		export excel label b se ll ul `mdepos' pvalue using `saving' , replace first(varl)
 	}
 
 	// Graph ----------------------------------------------------------------------------------
