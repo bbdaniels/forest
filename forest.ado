@@ -18,6 +18,8 @@ syntax anything /// syntax – forest reg d1 d2 d3
     [Bonferroni] [bh] /// FWER corrections
     [GRAPHopts(string asis)] /// Open-ended options for tw command
     [CRITical(real 0.05)] /// Allow changing critical value: 0.05 as default
+		[Saving(string asis)] /// Save table
+		[forestpower] /// Hidden option to implement Power call
     [*] /// regression options
 
 
@@ -70,7 +72,7 @@ forvalues i = 1/`nStrings' {
   // Set up multiple hypothesis correction
 	if "`bonferroni'" != "" {
     // Get Bonferroni critical value
-		local level = round(`=100-(5/`=`: word count `string`i'''-1')',0.01)
+		local level = round(`=100-(5/`: word count `string`i''')',0.01)
     // Round to 2 digits (required by reg)
     local level : di %3.2f `level'
     // Implement using level() option NOTE: Do other specs use different options?
@@ -107,7 +109,7 @@ forvalues i = 1/`nStrings' {
     // Store results
 		mat a = r(table)'
 		mat a = a[1,....]
-    mat a = `i' , a
+    mat a = `i' , `e(N)' , a
 
 		mat results = nullmat(results) ///
 			\ a
@@ -181,6 +183,28 @@ svmat results , n(col)
 		local log `"xtit({&larr} `std'Effect of `tlab' {&rarr}) xline(0,lc(black) lw(thin) lp(dash))"'
 		gen x1=0
 		gen x2=0
+	}
+	
+	// Power implementation escape ----------------------------------------------------------------------------------
+	if "`forestpower'" != "" {
+		restore, not
+		exit
+	}
+
+	// Saving ----------------------------------------------------------------------------------
+  if `"`saving'"' != `""' {
+		if "`mde'" != "" {
+		  lab var mdeL "Minimum Detectable Effect"
+			local mdepos "mdeL"
+		}
+		
+		lab var b "Point Estimate"
+		lab var se "Unadjusted Standard Error"
+		lab var pvalue "Unadjusted P-Value"
+		lab var label "Outcome"
+		lab var ll "CI Lower"
+		lab var ul "CI Upper"
+		export excel label b se ll ul `mdepos' pvalue using `saving' , replace first(varl)
 	}
 
 	// Graph ----------------------------------------------------------------------------------
