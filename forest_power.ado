@@ -5,9 +5,9 @@ prog def forest_power
 syntax anything , ///
   at(string asis) ///
   [reps(integer 10000)] ///
-  [seed(integer 123456)] /// 
+  [seed(integer 123456)] ///
   [graph_opts(string asis)] ///
-	[Saving(string asis)] /// Save table
+  [Saving(string asis)] /// Save table
   [*] // Options to pass to [forest]
 
 qui {
@@ -21,13 +21,13 @@ restore
 // Get all regression results --------------------------------------------------
 foreach x of numlist `at' {
   preserve
-  
+
     expand `x'
     forest `anything', forestpower `options'
     gen multiple = `x'
     append using `all_results'
       save `all_results' , replace
-    
+
   restore
 }
 
@@ -37,24 +37,24 @@ preserve
   isid label multiple, sort
   set seed `seed'
   expand `reps'
-  
+
   gen rand = rnormal()
     gen b_new  = b + rand*se
     gen rsig   = (b_new > (ul-b)) | (b_new < (ll-b))
     gen type_s = ((b_new > 0 & b < 0) | (b_new < 0 & b > 0)) if rsig
-    gen type_m = abs(b_new / b) if rsig 
+    gen type_m = abs(b_new / b) if rsig
     collapse (mean) rsig type_s type_m multiple, by(label c2)
-		
+
   if `"`saving'"' != `""' {
-		lab var rsig "Power"
-		lab var type_s "Type S"
-		lab var type_m "Type M"
-		lab var multiple "Sample Multiple"
-		lab var label "Variable"
-		sort label multiple
-		export excel label multiple rsig type_s type_m  using `saving' , replace first(varl)
-	}
-    
+    lab var rsig "Power"
+    lab var type_s "Type S"
+    lab var type_m "Type M"
+    lab var multiple "Sample Multiple"
+    lab var label "Variable"
+    sort label multiple
+    export excel label multiple rsig type_s type_m  using `saving' , replace first(varl)
+  }
+
   levelsof label , local(levels)
   local i = 0
   foreach l in `levels' {
@@ -67,9 +67,9 @@ preserve
 
   sort c2
     local nn = c2[1]
-  
+
   tempname ga gb gc
-  
+
   tw `g1' , nodraw saving(`gc'.gph , replace) legend(on order(`legend')) ///
     title("Power (vs N = `nn')") ylab(0 "0%" .2 "20%" .4 "40%" .6 "60%" .8 "80%" 1 "100%") yline(0.8) ///
     xtit("Sample Size Multiple") ytit("") xscale(r(1)) xlab(#6) legend(size(small))
@@ -79,12 +79,12 @@ preserve
   tw `g3' , nodraw saving(`gb'.gph , replace) ///
    title("Exaggeration Factor When Significant") ///
    xtit("") ytit("") xscale(r(1)) xlab(#6)
-  
+
   graph combine `gb'.gph `ga'.gph , c(1) nodraw saving(`ga'.gph , replace)
   graph combine `gc'.gph `ga'.gph , c(2)
-  
+
   !rm `ga'.gph `gb'.gph `gc'.gph
-  
+
 }
 
 end
