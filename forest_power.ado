@@ -70,7 +70,7 @@ preserve
 
   tempname ga gb gc
 
-  tw `g1' , nodraw saving(`gc'.gph , replace) legend(on order(`legend')) ///
+  tw `g1' , nodraw saving(`gc'.gph , replace) legend(on size(small) symxsize(small) order(`legend')) ///
     title("Power (vs N = `nn')") ylab(0 "0%" .2 "20%" .4 "40%" .6 "60%" .8 "80%" 1 "100%") yline(0.8) ///
     xtit("Sample Size Multiple") ytit("") xscale(r(1)) xlab(#6) legend(size(small))
   tw `g2' , nodraw saving(`ga'.gph , replace) ///
