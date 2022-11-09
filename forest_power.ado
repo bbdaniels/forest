@@ -2,12 +2,13 @@
 cap prog drop forest_power
 prog def forest_power
 
-syntax anything , ///
+syntax anything [if] [in], ///
   at(string asis) ///
   [reps(integer 10000)] ///
   [seed(integer 123456)] ///
   [graph_opts(string asis)] ///
   [Saving(string asis)] /// Save table
+  [noms] /// no details
   [*] // Options to pass to [forest]
 
 qui {
@@ -22,8 +23,9 @@ restore
 foreach x of numlist `at' {
   preserve
 
+    marksample touse
     expand `x'
-    forest `anything', forestpower `options'
+    forest `anything' if `touse' == 1, forestpower `options'
     gen multiple = `x'
     append using `all_results'
       save `all_results' , replace
@@ -70,7 +72,8 @@ preserve
 
   tempname ga gb gc
 
-  tw `g1' , nodraw saving(`gc'.gph , replace) legend(on order(`legend')) ///
+if "`ms'" == "" {
+  tw `g1' , nodraw saving(`gc'.gph , replace) legend(on size(small) symxsize(small) order(`legend')) ///
     title("Power (vs N = `nn')") ylab(0 "0%" .2 "20%" .4 "40%" .6 "60%" .8 "80%" 1 "100%") yline(0.8) ///
     xtit("Sample Size Multiple") ytit("") xscale(r(1)) xlab(#6) legend(size(small))
   tw `g2' , nodraw saving(`ga'.gph , replace) ///
@@ -84,6 +87,12 @@ preserve
   graph combine `gc'.gph `ga'.gph , c(2)
 
   !rm `ga'.gph `gb'.gph `gc'.gph
+}
+else {
+  tw `g1' , legend(on pos(3) size(small) symxsize(small) order(`legend')) ///
+    title("Power (vs N = `nn')") ylab(0 "0%" .2 "20%" .4 "40%" .6 "60%" .8 "80%" 1 "100%") yline(0.8) ///
+    xtit("Sample Size Multiple") ytit("") xscale(r(1)) xlab(#6) legend(size(small))
+}
 
 }
 
