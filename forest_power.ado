@@ -2,7 +2,7 @@
 cap prog drop forest_power
 prog def forest_power
 
-syntax anything , ///
+syntax anything [if] [in], ///
   at(string asis) ///
   [reps(integer 10000)] ///
   [seed(integer 123456)] ///
@@ -22,8 +22,9 @@ restore
 foreach x of numlist `at' {
   preserve
 
+    marksample touse
     expand `x'
-    forest `anything', forestpower `options'
+    forest `anything' if `touse' == 1, forestpower `options'
     gen multiple = `x'
     append using `all_results'
       save `all_results' , replace
